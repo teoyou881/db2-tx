@@ -1,9 +1,9 @@
 package hello.springtx.propagation;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +19,12 @@ class MemberServiceTest {
   @Autowired
   LogRepository logRepository;
 
+
+  /**
+   * MemberService @Transactional:OFF
+   * MemberRepository @Transactional:ON
+   * LogRepository @Transactional:ON
+   */
   @Test
   void outerTxOff_success() {
     // given
@@ -34,19 +40,41 @@ class MemberServiceTest {
                             .isPresent());
   }
 
+  /**
+   * MemberService @Transactional:OFF
+   * MemberRepository @Transactional:ON
+   * LogRepository @Transactional:ON Exception
+   */
   @Test
   void outerTxOff_fail() {
     // given
     String username = "LogException";
 
     // when
-    Assertions.assertThatThrownBy(() -> memberService.joinV1(username))
-              .isInstanceOf(RuntimeException.class);
+    assertThatThrownBy(() -> memberService.joinV1(username)).isInstanceOf(RuntimeException.class);
 
     // then: member data was saved, but log data was not.
     assertTrue(memberRepository.find(username)
                                .isPresent());
     assertTrue(logRepository.find(username)
                             .isEmpty());
+  }
+
+  /**
+   * MemberService @Transactional:ON
+   * MemberRepository @Transactional:OFF
+   * LogRepository @Transactional:OFF
+   */
+  @Test
+  void singleTx() {
+    // given
+    String username = "singleTx";
+    // when
+    memberService.joinV1(username);
+    // then: 모든 데이터가 정상 저장된다.
+    assertTrue(memberRepository.find(username)
+                               .isPresent());
+    assertTrue(logRepository.find(username)
+                            .isPresent());
   }
 }

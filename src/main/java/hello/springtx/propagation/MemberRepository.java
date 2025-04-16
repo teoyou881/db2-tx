@@ -5,6 +5,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Repository
@@ -13,7 +14,7 @@ public class MemberRepository {
 
   private final EntityManager em;
 
-  // @Transactional
+  @Transactional
   public void save(Member member) {
     log.info("Saving member");
     em.persist(member);
